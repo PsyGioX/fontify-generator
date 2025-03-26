@@ -6,12 +6,15 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { ArrowRight, FileText, Link, Upload } from 'lucide-react';
+import { ArrowRight, FileText, Link, Upload, Download } from 'lucide-react';
 import FontPreview from './FontPreview';
 import CodeOutput from './CodeOutput';
 import { parseGoogleFontUrl, generateGoogleFontCss, generateGoogleFontHtml, processUploadedFont } from '@/utils/fontUtils';
+import { downloadFontArchive } from '@/utils/archiveUtils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const FontGenerator: React.FC = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('google');
   const [googleFontUrl, setGoogleFontUrl] = useState('');
   const [fontFamily, setFontFamily] = useState('');
@@ -21,6 +24,7 @@ const FontGenerator: React.FC = () => {
   const [html, setHtml] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const resetState = () => {
@@ -119,32 +123,50 @@ const FontGenerator: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  const handleDownloadArchive = async () => {
+    if (!fontFamily || !css) {
+      toast.error(t('fontGenerator.noFontToDownload'));
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      await downloadFontArchive(fontFamily, css, fontUrl, isGoogleFont);
+      toast.success(t('fontGenerator.downloadSuccess', { font: fontFamily }));
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error(t('fontGenerator.downloadError'));
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto animate-fade-in">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8">
           <TabsTrigger value="google" className="flex items-center gap-2 py-3">
             <Link className="h-4 w-4" />
-            <span>Google Fonts</span>
+            <span>{t('fontGenerator.googleFontsTab')}</span>
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-2 py-3">
             <FileText className="h-4 w-4" />
-            <span>Upload Font</span>
+            <span>{t('fontGenerator.uploadFontTab')}</span>
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="google" className="animate-slide-up">
           <div className="glass-panel rounded-xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Generate from Google Fonts</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('fontGenerator.googleFontsTitle')}</h2>
             <p className="text-muted-foreground mb-6">
-              Enter a Google Fonts URL to generate CSS and connection code.
+              {t('fontGenerator.googleFontsDescription')}
             </p>
             
             <div className="flex gap-4 mb-2">
               <Input
                 value={googleFontUrl}
                 onChange={(e) => setGoogleFontUrl(e.target.value)}
-                placeholder="https://fonts.google.com/specimen/Roboto"
+                placeholder={t('fontGenerator.googleFontsPlaceholder')}
                 className="flex-1"
               />
               <Button 
@@ -152,21 +174,21 @@ const FontGenerator: React.FC = () => {
                 disabled={isProcessing || !googleFontUrl}
                 className="gap-2"
               >
-                Process
+                {t('fontGenerator.processButton')}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Example: https://fonts.google.com/specimen/Roboto or https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap
+              {t('fontGenerator.googleFontsExample')}
             </p>
           </div>
         </TabsContent>
         
         <TabsContent value="upload" className="animate-slide-up">
           <div className="glass-panel rounded-xl p-6">
-            <h2 className="text-xl font-semibold mb-4">Generate from Font File</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('fontGenerator.uploadFontTitle')}</h2>
             <p className="text-muted-foreground mb-6">
-              Upload a TTF or OTF font file to generate CSS and connection code.
+              {t('fontGenerator.uploadFontDescription')}
             </p>
             
             <input
@@ -184,7 +206,7 @@ const FontGenerator: React.FC = () => {
               className="w-full h-24 border-dashed flex flex-col gap-2 hover:bg-muted/50"
             >
               <Upload className="h-6 w-6" />
-              <span>Select TTF or OTF Font File</span>
+              <span>{t('fontGenerator.selectFileButton')}</span>
             </Button>
           </div>
         </TabsContent>
@@ -192,7 +214,7 @@ const FontGenerator: React.FC = () => {
       
       {isProcessing && (
         <div className="mt-8 text-center animate-pulse">
-          <p className="text-muted-foreground">Processing font...</p>
+          <p className="text-muted-foreground">{t('fontGenerator.processingMessage')}</p>
         </div>
       )}
       
@@ -200,7 +222,20 @@ const FontGenerator: React.FC = () => {
         <div className="mt-12 space-y-8 animate-slide-up">
           <Separator />
           
-          <h2 className="text-2xl font-semibold text-center">{fontFamily}</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-semibold">{fontFamily}</h2>
+            
+            <Button 
+              onClick={handleDownloadArchive} 
+              variant="outline" 
+              disabled={isDownloading}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              <span>{t('fontGenerator.downloadArchive')}</span>
+              {isDownloading && <span className="ml-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>}
+            </Button>
+          </div>
           
           <FontPreview 
             fontFamily={fontFamily}
