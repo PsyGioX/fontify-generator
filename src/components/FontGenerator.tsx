@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { ArrowRight, FileFont, Link, Upload } from 'lucide-react';
+import { ArrowRight, FileText, Link, Upload } from 'lucide-react';
 import FontPreview from './FontPreview';
 import CodeOutput from './CodeOutput';
 import { parseGoogleFontUrl, generateGoogleFontCss, generateGoogleFontHtml, processUploadedFont } from '@/utils/fontUtils';
@@ -128,7 +128,7 @@ const FontGenerator: React.FC = () => {
             <span>Google Fonts</span>
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-2 py-3">
-            <FileFont className="h-4 w-4" />
+            <FileText className="h-4 w-4" />
             <span>Upload Font</span>
           </TabsTrigger>
         </TabsList>
