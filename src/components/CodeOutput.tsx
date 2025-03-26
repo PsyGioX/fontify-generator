@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ClipboardCopy, Check } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CodeOutputProps {
   css: string;
@@ -17,6 +18,7 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
   html,
   className
 }) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('css');
   const [copiedCss, setCopiedCss] = useState(false);
   const [copiedHtml, setCopiedHtml] = useState(false);
@@ -24,7 +26,7 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
   const handleCopy = (text: string, type: 'css' | 'html') => {
     navigator.clipboard.writeText(text)
       .then(() => {
-        toast.success(`${type.toUpperCase()} copied to clipboard`);
+        toast.success(t('codeOutput.successMessage', { type: type.toUpperCase() }));
         if (type === 'css') {
           setCopiedCss(true);
           setTimeout(() => setCopiedCss(false), 2000);
@@ -34,7 +36,7 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
         }
       })
       .catch(() => {
-        toast.error(`Failed to copy ${type.toUpperCase()}`);
+        toast.error(t('codeOutput.errorMessage', { type: type.toUpperCase() }));
       });
   };
   
@@ -45,17 +47,17 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
     )}>
       <Tabs defaultValue="css" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between px-6 pt-4 pb-2 border-b">
-          <h3 className="text-lg font-medium">Generated Code</h3>
+          <h3 className="text-lg font-medium">{t('codeOutput.title')}</h3>
           <TabsList className="grid grid-cols-2 w-[180px]">
-            <TabsTrigger value="css">CSS</TabsTrigger>
-            <TabsTrigger value="html">HTML</TabsTrigger>
+            <TabsTrigger value="css">{t('codeOutput.css')}</TabsTrigger>
+            <TabsTrigger value="html">{t('codeOutput.html')}</TabsTrigger>
           </TabsList>
         </div>
         
         <TabsContent value="css" className="p-0 m-0">
           <div className="relative">
             <pre className="code-block m-0 rounded-t-none pt-10 min-h-[220px] max-h-[400px] text-sm overflow-auto">
-              <code>{css || '/* CSS will appear here */'}</code>
+              <code>{css || t('codeOutput.cssPlaceholder')}</code>
             </pre>
             <Button
               size="sm"
@@ -67,12 +69,12 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
               {copiedCss ? (
                 <>
                   <Check className="h-4 w-4" />
-                  <span>Copied</span>
+                  <span>{t('codeOutput.copied')}</span>
                 </>
               ) : (
                 <>
                   <ClipboardCopy className="h-4 w-4" />
-                  <span>Copy</span>
+                  <span>{t('codeOutput.copy')}</span>
                 </>
               )}
             </Button>
@@ -82,7 +84,7 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
         <TabsContent value="html" className="p-0 m-0">
           <div className="relative">
             <pre className="code-block m-0 rounded-t-none pt-10 min-h-[220px] max-h-[400px] text-sm overflow-auto">
-              <code>{html || '<!-- HTML will appear here -->'}</code>
+              <code>{html || t('codeOutput.htmlPlaceholder')}</code>
             </pre>
             <Button
               size="sm"
@@ -94,12 +96,12 @@ const CodeOutput: React.FC<CodeOutputProps> = ({
               {copiedHtml ? (
                 <>
                   <Check className="h-4 w-4" />
-                  <span>Copied</span>
+                  <span>{t('codeOutput.copied')}</span>
                 </>
               ) : (
                 <>
                   <ClipboardCopy className="h-4 w-4" />
-                  <span>Copy</span>
+                  <span>{t('codeOutput.copy')}</span>
                 </>
               )}
             </Button>

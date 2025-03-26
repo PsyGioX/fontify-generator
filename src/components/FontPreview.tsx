@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { loadFontForPreview } from '@/utils/fontUtils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FontPreviewProps {
   fontFamily: string;
@@ -16,6 +17,7 @@ const FontPreview: React.FC<FontPreviewProps> = ({
   isGoogleFont,
   className
 }) => {
+  const { t } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -58,7 +60,7 @@ const FontPreview: React.FC<FontPreviewProps> = ({
         "p-6 rounded-xl border border-border bg-secondary/30",
         className
       )}>
-        <p className="text-muted-foreground">Font preview unavailable</p>
+        <p className="text-muted-foreground">{t('preview.unavailable')}</p>
       </div>
     );
   }
@@ -74,24 +76,21 @@ const FontPreview: React.FC<FontPreviewProps> = ({
       
       <div className="space-y-6">
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Headline</span>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">{t('preview.headline')}</span>
           <h2 style={{ fontFamily: `"${fontFamily}", sans-serif` }} className="text-4xl font-semibold">
-            The quick brown fox jumps over the lazy dog
+            {t('preview.sampleText')}
           </h2>
         </div>
         
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Paragraph</span>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">{t('preview.paragraph')}</span>
           <p style={{ fontFamily: `"${fontFamily}", sans-serif` }} className="text-base">
-            Typography is the art and technique of arranging type to make written language legible,
-            readable, and appealing when displayed. The arrangement of type involves selecting typefaces,
-            point sizes, line lengths, line-spacing, and letter-spacing, and adjusting the space between
-            pairs of letters.
+            {t('preview.sampleParagraph')}
           </p>
         </div>
         
         <div>
-          <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Characters</span>
+          <span className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">{t('preview.characters')}</span>
           <p style={{ fontFamily: `"${fontFamily}", sans-serif` }} className="text-xl tracking-wide">
             ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
             abcdefghijklmnopqrstuvwxyz<br />
