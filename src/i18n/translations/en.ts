@@ -12,6 +12,10 @@ export default {
     en: 'English',
     ru: 'Russian'
   },
+  language: {
+    en: 'English',
+    ru: 'Russian'
+  },
   fontGenerator: {
     googleFontsTab: 'Google Fonts',
     uploadFontTab: 'Upload Font',
@@ -29,14 +33,14 @@ export default {
     downloadSuccess: '{{font}} package downloaded successfully',
     downloadError: 'Error downloading font package'
   },
-  fontPreview: {
+  preview: {
     heading: 'Preview',
-    sample: 'Sample Text',
-    paragraph: 'The quick brown fox jumps over the lazy dog. 0123456789',
-    alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz',
-    customText: 'Custom Text:',
-    customTextPlaceholder: 'Type your text here...',
-    previewSizes: 'Preview Sizes'
+    unavailable: 'Preview not available',
+    sampleText: 'Sample Text',
+    sampleParagraph: 'The quick brown fox jumps over the lazy dog. 0123456789',
+    headline: 'Headline',
+    paragraph: 'Paragraph',
+    characters: 'Characters'
   },
   codeOutput: {
     title: 'Code Output',

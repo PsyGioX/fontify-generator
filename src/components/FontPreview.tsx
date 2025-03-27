@@ -71,7 +71,7 @@ const FontPreview: React.FC<FontPreviewProps> = ({
       className
     )}>
       <h3 className="text-2xl font-semibold mb-6 text-balance">
-        {fontFamily} Preview
+        {fontFamily} {t('preview.heading')}
       </h3>
       
       <div className="space-y-6">

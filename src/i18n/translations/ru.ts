@@ -12,6 +12,10 @@ export default {
     en: 'Английский',
     ru: 'Русский'
   },
+  language: {
+    en: 'Английский',
+    ru: 'Русский'
+  },
   fontGenerator: {
     googleFontsTab: 'Google Fonts',
     uploadFontTab: 'Загрузить шрифт',
@@ -29,14 +33,14 @@ export default {
     downloadSuccess: 'Пакет {{font}} успешно скачан',
     downloadError: 'Ошибка при скачивании пакета шрифта'
   },
-  fontPreview: {
+  preview: {
     heading: 'Предпросмотр',
-    sample: 'Пример текста',
-    paragraph: 'Съешь же ещё этих мягких французских булок, да выпей чаю. 0123456789',
-    alphabet: 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ абвгдеёжзийклмнопрстуфхцчшщъыьэюя',
-    customText: 'Свой текст:',
-    customTextPlaceholder: 'Введите свой текст...',
-    previewSizes: 'Размеры для предпросмотра'
+    unavailable: 'Предпросмотр недоступен',
+    sampleText: 'Пример текста',
+    sampleParagraph: 'Съешь же ещё этих мягких французских булок, да выпей чаю. 0123456789',
+    headline: 'Заголовок',
+    paragraph: 'Параграф',
+    characters: 'Символы'
   },
   codeOutput: {
     title: 'Код для подключения',

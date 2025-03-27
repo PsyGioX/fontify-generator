@@ -13,7 +13,7 @@ const LanguageSwitcher: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9">
           <Globe className="h-4 w-4" />
-          <span className="sr-only">Toggle language</span>
+          <span className="sr-only">{t('languageSwitcher.select')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
