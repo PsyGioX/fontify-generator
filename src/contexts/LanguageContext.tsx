@@ -1,38 +1,42 @@
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import i18n from '../i18n/i18n';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { availableLocales, detectLocale, saveLocale, translate, type MessageKey } from "@/i18n";
+import { LanguageContext } from "./language-context";
 
-type LanguageContextType = {
-  locale: string;
-  setLocale: (locale: string) => void;
-  t: (key: string, options?: Record<string, any>) => string;
-  availableLocales: string[];
-};
-
-const LanguageContext = createContext<LanguageContextType>({
-  locale: 'en',
-  setLocale: () => {},
-  t: () => '',
-  availableLocales: ['en', 'ru'],
-});
-
-export const useLanguage = () => useContext(LanguageContext);
-
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [locale, setLocale] = useState(i18n.locale);
-  const availableLocales = Object.keys(i18n.translations);
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocaleState] = useState<string>(detectLocale);
 
   useEffect(() => {
-    i18n.locale = locale;
+    document.documentElement.lang = locale;
+    // Keep the document metadata in sync with the UI language.
+    if (!document.title.startsWith("404")) document.title = translate(locale, "seo.title");
+    const description = translate(locale, "seo.description");
+    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+    document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
+    document
+      .querySelector('meta[property="og:locale"]')
+      ?.setAttribute("content", locale === "ru" ? "ru_RU" : "en_US");
   }, [locale]);
 
-  const t = (key: string, options?: Record<string, any>): string => {
-    return i18n.t(key, options);
-  };
+  const setLocale = useCallback((next: string) => {
+    setLocaleState(next);
+    saveLocale(next);
+  }, []);
 
-  return (
-    <LanguageContext.Provider value={{ locale, setLocale, t, availableLocales }}>
-      {children}
-    </LanguageContext.Provider>
+  const t = useCallback(
+    (key: MessageKey, vars?: Record<string, string | number>) => translate(locale, key, vars),
+    [locale]
   );
-};
+
+  const value = useMemo(
+    () => ({ locale, setLocale, t, availableLocales }),
+    [locale, setLocale, t]
+  );
+
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}

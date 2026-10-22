@@ -1,19 +1,28 @@
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ */
 
-import React from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Globe } from 'lucide-react';
+import { Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/contexts/language-context";
+import type { MessageKey } from "@/i18n";
 
-const LanguageSwitcher: React.FC = () => {
+export default function LanguageSwitcher() {
   const { locale, setLocale, t, availableLocales } = useLanguage();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Globe className="h-4 w-4" />
-          <span className="sr-only">{t('languageSwitcher.select')}</span>
+        <Button variant="ghost" size="icon" aria-label={t("languageSwitcher.select")}>
+          <Globe />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -23,12 +32,10 @@ const LanguageSwitcher: React.FC = () => {
             onClick={() => setLocale(lang)}
             className={locale === lang ? "bg-accent" : ""}
           >
-            {t(`language.${lang}`)}
+            {t(`language.${lang}` as MessageKey)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-
-export default LanguageSwitcher;
+}

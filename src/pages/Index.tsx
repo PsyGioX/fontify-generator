@@ -1,44 +1,37 @@
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ */
 
-import React from 'react';
-import FontGenerator from '@/components/FontGenerator';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { useLanguage } from '@/contexts/LanguageContext';
+import FontGenerator from "@/components/FontGenerator";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
+import { useLanguage } from "@/contexts/language-context";
 
 const Index = () => {
   const { t } = useLanguage();
-  
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="w-full py-8 px-6 border-b border-border/40 backdrop-blur-sm sticky top-0 z-10 bg-background/80">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="flex flex-col gap-1">
-              <div className="inline-flex items-center gap-2">
-                <div className="h-3 w-3 bg-primary rounded-full"></div>
-                <span className="text-sm font-medium tracking-wide text-muted-foreground">{t('header.brand')}</span>
-              </div>
-              <h1 className="text-4xl font-semibold tracking-tight">{t('app.title')}</h1>
-            </div>
-            <LanguageSwitcher />
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader />
+
+      <main className="hero-glow flex-1">
+        <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
+          <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-12">
+            <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              {t("app.title")}
+            </h1>
+            <p className="mt-3 text-balance text-base text-muted-foreground sm:mt-4 sm:text-lg">
+              {t("app.subtitle")}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{t("app.privacy")}</p>
           </div>
+          <FontGenerator />
         </div>
-      </header>
-      
-      <main className="flex-1 w-full max-w-screen-xl mx-auto px-6 py-12">
-        <FontGenerator />
       </main>
-      
-      <footer className="w-full py-8 px-6 border-t border-border/40">
-        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center gap-3 text-center">
-          <p className="text-sm text-muted-foreground">
-            {t('app.subtitle')}
-          </p>
-          <div className="inline-flex items-center gap-2">
-            <div className="h-2 w-2 bg-primary rounded-full"></div>
-            <span className="text-xs font-medium tracking-wide text-muted-foreground">{t('header.brand')}</span>
-          </div>
-        </div>
-      </footer>
+
+      <SiteFooter />
     </div>
   );
 };

@@ -1,3 +1,10 @@
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ * Based on shadcn/ui (MIT) - https://ui.shadcn.com
+ */
+
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"

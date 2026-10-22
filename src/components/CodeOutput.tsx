@@ -1,115 +1,85 @@
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ */
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { ClipboardCopy, Check } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useState } from "react";
+import { Check, ClipboardCopy } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/language-context";
+import { copyText } from "@/lib/clipboard";
+import { cn } from "@/lib/utils";
 
-interface CodeOutputProps {
+interface Props {
   css: string;
   html: string;
+  tailwind: string;
   className?: string;
 }
 
-const CodeOutput: React.FC<CodeOutputProps> = ({
-  css,
-  html,
-  className
-}) => {
+type Kind = "css" | "html" | "tailwind";
+
+export default function CodeOutput({ css, html, tailwind, className }: Props) {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('css');
-  const [copiedCss, setCopiedCss] = useState(false);
-  const [copiedHtml, setCopiedHtml] = useState(false);
-  
-  const handleCopy = (text: string, type: 'css' | 'html') => {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        toast.success(t('codeOutput.successMessage', { type: type.toUpperCase() }));
-        if (type === 'css') {
-          setCopiedCss(true);
-          setTimeout(() => setCopiedCss(false), 2000);
-        } else {
-          setCopiedHtml(true);
-          setTimeout(() => setCopiedHtml(false), 2000);
-        }
-      })
-      .catch(() => {
-        toast.error(t('codeOutput.errorMessage', { type: type.toUpperCase() }));
-      });
+  const [active, setActive] = useState<Kind>("css");
+  const [copied, setCopied] = useState<Kind | null>(null);
+
+  const snippets: Record<Kind, string> = { css, html, tailwind };
+  const labels: Record<Kind, string> = {
+    css: t("codeOutput.css"),
+    html: t("codeOutput.html"),
+    tailwind: t("codeOutput.tailwind"),
   };
-  
+
+  const handleCopy = async (kind: Kind) => {
+    const ok = await copyText(snippets[kind]);
+    if (ok) {
+      toast.success(t("codeOutput.successMessage", { type: labels[kind] }));
+      setCopied(kind);
+      setTimeout(() => setCopied((c) => (c === kind ? null : c)), 2000);
+    } else {
+      toast.error(t("codeOutput.errorMessage", { type: labels[kind] }));
+    }
+  };
+
   return (
-    <div className={cn(
-      "rounded-xl border border-border bg-card transition-all duration-300 animate-fade-in",
-      className
-    )}>
-      <Tabs defaultValue="css" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between px-6 pt-4 pb-2 border-b">
-          <h3 className="text-lg font-medium">{t('codeOutput.title')}</h3>
-          <TabsList className="grid grid-cols-2 w-[180px]">
-            <TabsTrigger value="css">{t('codeOutput.css')}</TabsTrigger>
-            <TabsTrigger value="html">{t('codeOutput.html')}</TabsTrigger>
+    <div className={cn("panel overflow-hidden", className)}>
+      <Tabs value={active} onValueChange={(v) => setActive(v as Kind)} className="w-full">
+        <div className="flex flex-col gap-3 border-b border-border p-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <h3 className="px-1 text-lg font-semibold">{t("codeOutput.title")}</h3>
+          <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+            {(Object.keys(labels) as Kind[]).map((kind) => (
+              <TabsTrigger key={kind} value={kind}>
+                {labels[kind]}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
-        
-        <TabsContent value="css" className="p-0 m-0">
-          <div className="relative">
-            <pre className="code-block m-0 rounded-t-none pt-10 min-h-[220px] max-h-[400px] text-sm overflow-auto">
-              <code>{css || t('codeOutput.cssPlaceholder')}</code>
+
+        {(Object.keys(snippets) as Kind[]).map((kind) => (
+          <TabsContent key={kind} value={kind} className="relative m-0">
+            <pre
+              className="code-block m-0 max-h-96 min-h-48 p-4 pr-4 pt-14 sm:pt-12"
+              tabIndex={0}
+              aria-label={labels[kind]}
+            >
+              <code>{snippets[kind]}</code>
             </pre>
             <Button
               size="sm"
-              variant="ghost"
-              className="absolute top-2 right-2 h-8 gap-1"
-              onClick={() => handleCopy(css, 'css')}
-              disabled={!css || copiedCss}
+              variant="outline"
+              className="absolute right-3 top-3"
+              onClick={() => handleCopy(kind)}
             >
-              {copiedCss ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  <span>{t('codeOutput.copied')}</span>
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="h-4 w-4" />
-                  <span>{t('codeOutput.copy')}</span>
-                </>
-              )}
+              {copied === kind ? <Check /> : <ClipboardCopy />}
+              <span>{copied === kind ? t("codeOutput.copied") : t("codeOutput.copy")}</span>
             </Button>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="html" className="p-0 m-0">
-          <div className="relative">
-            <pre className="code-block m-0 rounded-t-none pt-10 min-h-[220px] max-h-[400px] text-sm overflow-auto">
-              <code>{html || t('codeOutput.htmlPlaceholder')}</code>
-            </pre>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="absolute top-2 right-2 h-8 gap-1"
-              onClick={() => handleCopy(html, 'html')}
-              disabled={!html || copiedHtml}
-            >
-              {copiedHtml ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  <span>{t('codeOutput.copied')}</span>
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="h-4 w-4" />
-                  <span>{t('codeOutput.copy')}</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </TabsContent>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
-};
-
-export default CodeOutput;
+}

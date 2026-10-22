@@ -1,256 +1,166 @@
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ */
 
-import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { ArrowRight, FileText, Link, Upload, Download } from 'lucide-react';
-import FontPreview from './FontPreview';
-import CodeOutput from './CodeOutput';
-import { parseGoogleFontUrl, generateGoogleFontCss, generateGoogleFontHtml, processUploadedFont } from '@/utils/fontUtils';
-import { downloadFontArchive } from '@/utils/archiveUtils';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useMemo, useState } from "react";
+import { Download, FileText, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/language-context";
+import { downloadFontArchive } from "@/utils/archiveUtils";
+import {
+  FontUploadError,
+  generateCss,
+  generateHtml,
+  generateTailwind,
+  parseGoogleFontInput,
+  processUploadedFont,
+  type FontSource,
+} from "@/utils/fontUtils";
+import CodeOutput from "./CodeOutput";
+import FontPreview from "./FontPreview";
+import FontUpload from "./FontUpload";
+import GoogleFontForm from "./GoogleFontForm";
+import WeightSelector from "./WeightSelector";
 
-const FontGenerator: React.FC = () => {
+const UPLOAD_ERRORS = {
+  extension: "upload.errorExtension",
+  size: "upload.errorSize",
+  signature: "upload.errorSignature",
+  read: "upload.errorRead",
+} as const;
+
+export default function FontGenerator() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('google');
-  const [googleFontUrl, setGoogleFontUrl] = useState('');
-  const [fontFamily, setFontFamily] = useState('');
-  const [fontUrl, setFontUrl] = useState('');
-  const [isGoogleFont, setIsGoogleFont] = useState(true);
-  const [css, setCss] = useState('');
-  const [html, setHtml] = useState('');
+  const [tab, setTab] = useState("google");
+  const [source, setSource] = useState<FontSource | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const resetState = () => {
-    setFontFamily('');
-    setFontUrl('');
-    setCss('');
-    setHtml('');
-    setShowPreview(false);
-  };
-  
+
+  const output = useMemo(
+    () =>
+      source
+        ? { css: generateCss(source), html: generateHtml(source), tailwind: generateTailwind(source) }
+        : null,
+    [source]
+  );
+
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    resetState();
-    setGoogleFontUrl('');
+    setTab(value);
+    setSource(null);
   };
-  
-  const handleGoogleFontProcess = () => {
-    if (!googleFontUrl) {
-      toast.error('Please enter a Google Font URL');
+
+  const handleGoogle = (raw: string) => {
+    if (!raw.trim()) {
+      toast.error(t("fontGenerator.enterUrl"));
       return;
     }
-    
+    const parsed = parseGoogleFontInput(raw);
+    if (!parsed) {
+      toast.error(t("fontGenerator.invalidUrl"));
+      return;
+    }
+    setSource(parsed);
+    toast.success(t("fontGenerator.processSuccess", { font: parsed.family }));
+  };
+
+  const handleFile = async (file: File) => {
     setIsProcessing(true);
-    resetState();
-    
     try {
-      const fontData = parseGoogleFontUrl(googleFontUrl);
-      if (!fontData) {
-        toast.error('Invalid Google Font URL. Please check and try again.');
-        setIsProcessing(false);
-        return;
-      }
-      
-      const generatedCss = generateGoogleFontCss(fontData);
-      const generatedHtml = generateGoogleFontHtml(fontData);
-      
-      setFontFamily(fontData.family);
-      setFontUrl(fontData.url);
-      setIsGoogleFont(true);
-      setCss(generatedCss);
-      setHtml(generatedHtml);
-      setShowPreview(true);
-      
-      toast.success(`Font "${fontData.family}" processed successfully`);
+      const parsed = await processUploadedFont(file);
+      setSource(parsed);
+      toast.success(t("fontGenerator.processSuccess", { font: parsed.family }));
     } catch (error) {
-      console.error('Error processing Google Font:', error);
-      toast.error('Failed to process Google Font. Please try again.');
+      if (error instanceof FontUploadError) {
+        toast.error(t(UPLOAD_ERRORS[error.code]));
+      } else {
+        toast.error(t("fontGenerator.processError"));
+      }
     } finally {
       setIsProcessing(false);
     }
   };
-  
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const validTypes = ['font/ttf', 'font/otf', 'application/x-font-ttf', 'application/x-font-otf'];
-    // Also check file extension since MIME types can be unreliable
-    const isValidExtension = /\.(ttf|otf)$/i.test(file.name);
-    
-    if (!validTypes.includes(file.type) && !isValidExtension) {
-      toast.error('Please upload a valid font file (TTF or OTF)');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+
+  const handleDownload = async () => {
+    if (!source) {
+      toast.error(t("fontGenerator.noFontToDownload"));
       return;
     }
-    
-    setIsProcessing(true);
-    resetState();
-    
-    try {
-      const fontData = await processUploadedFont(file);
-      if (!fontData) {
-        toast.error('Failed to process font file. Please try again.');
-        setIsProcessing(false);
-        return;
-      }
-      
-      setFontFamily(fontData.family);
-      setFontUrl(fontData.previewUrl);
-      setIsGoogleFont(false);
-      setCss(fontData.css);
-      setHtml(fontData.html);
-      setShowPreview(true);
-      
-      toast.success(`Font "${fontData.family}" processed successfully`);
-    } catch (error) {
-      console.error('Error processing font file:', error);
-      toast.error('Failed to process font file. Please try again.');
-    } finally {
-      setIsProcessing(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-  
-  const handleFileButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleDownloadArchive = async () => {
-    if (!fontFamily || !css) {
-      toast.error(t('fontGenerator.noFontToDownload'));
-      return;
-    }
-
     setIsDownloading(true);
     try {
-      await downloadFontArchive(fontFamily, css, fontUrl, isGoogleFont);
-      toast.success(t('fontGenerator.downloadSuccess', { font: fontFamily }));
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error(t('fontGenerator.downloadError'));
+      await downloadFontArchive(source);
+      toast.success(t("fontGenerator.downloadSuccess", { font: source.family }));
+    } catch {
+      toast.error(t("fontGenerator.downloadError"));
     } finally {
       setIsDownloading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto animate-fade-in">
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-8">
-          <TabsTrigger value="google" className="flex items-center gap-2 py-3">
-            <Link className="h-4 w-4" />
-            <span>{t('fontGenerator.googleFontsTab')}</span>
+    <div className="mx-auto w-full max-w-4xl animate-fade-in">
+      <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="mx-auto mb-5 grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="google">
+            <LinkIcon className="h-4 w-4" />
+            <span>{t("fontGenerator.googleFontsTab")}</span>
           </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-2 py-3">
+          <TabsTrigger value="upload">
             <FileText className="h-4 w-4" />
-            <span>{t('fontGenerator.uploadFontTab')}</span>
+            <span>{t("fontGenerator.uploadFontTab")}</span>
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="google" className="animate-slide-up">
-          <div className="glass-panel rounded-xl p-6">
-            <h2 className="text-xl font-semibold mb-4">{t('fontGenerator.googleFontsTitle')}</h2>
-            <p className="text-muted-foreground mb-6">
-              {t('fontGenerator.googleFontsDescription')}
-            </p>
-            
-            <div className="flex gap-4 mb-2">
-              <Input
-                value={googleFontUrl}
-                onChange={(e) => setGoogleFontUrl(e.target.value)}
-                placeholder={t('fontGenerator.googleFontsPlaceholder')}
-                className="flex-1"
-              />
-              <Button 
-                onClick={handleGoogleFontProcess} 
-                disabled={isProcessing || !googleFontUrl}
-                className="gap-2"
-              >
-                {t('fontGenerator.processButton')}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('fontGenerator.googleFontsExample')}
-            </p>
-          </div>
+          <GoogleFontForm disabled={isProcessing} onSubmit={handleGoogle} />
         </TabsContent>
-        
         <TabsContent value="upload" className="animate-slide-up">
-          <div className="glass-panel rounded-xl p-6">
-            <h2 className="text-xl font-semibold mb-4">{t('fontGenerator.uploadFontTitle')}</h2>
-            <p className="text-muted-foreground mb-6">
-              {t('fontGenerator.uploadFontDescription')}
-            </p>
-            
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".ttf,.otf"
-              className="hidden"
-            />
-            
-            <Button 
-              onClick={handleFileButtonClick} 
-              variant="outline" 
-              disabled={isProcessing}
-              className="w-full h-24 border-dashed flex flex-col gap-2 hover:bg-muted/50"
-            >
-              <Upload className="h-6 w-6" />
-              <span>{t('fontGenerator.selectFileButton')}</span>
-            </Button>
-          </div>
+          <FontUpload disabled={isProcessing} onFile={handleFile} />
         </TabsContent>
       </Tabs>
-      
+
       {isProcessing && (
-        <div className="mt-8 text-center animate-pulse">
-          <p className="text-muted-foreground">{t('fontGenerator.processingMessage')}</p>
-        </div>
+        <p className="mt-6 animate-pulse text-center text-sm text-muted-foreground" role="status">
+          {t("fontGenerator.processingMessage")}
+        </p>
       )}
-      
-      {showPreview && (
-        <div className="mt-12 space-y-8 animate-slide-up">
+
+      {source && output && (
+        <div className="mt-8 space-y-6 animate-slide-up sm:mt-10">
           <Separator />
-          
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold">{fontFamily}</h2>
-            
-            <Button 
-              onClick={handleDownloadArchive} 
-              variant="outline" 
-              disabled={isDownloading}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              <span>{t('fontGenerator.downloadArchive')}</span>
-              {isDownloading && <span className="ml-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{source.family}</h2>
+              <p className="text-sm text-muted-foreground">
+                {source.kind === "google" ? t("fontGenerator.sourceGoogle") : t("fontGenerator.sourceFile")}
+              </p>
+            </div>
+            <Button onClick={handleDownload} variant="outline" disabled={isDownloading} className="w-full sm:w-auto">
+              <Download />
+              <span>{t("fontGenerator.downloadArchive")}</span>
+              {isDownloading && (
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              )}
             </Button>
           </div>
-          
-          <FontPreview 
-            fontFamily={fontFamily}
-            fontUrl={fontUrl}
-            isGoogleFont={isGoogleFont}
-          />
-          
-          <CodeOutput 
-            css={css}
-            html={html}
-          />
+
+          {source.kind === "google" && (
+            <WeightSelector
+              weights={source.weights}
+              italic={source.italic}
+              onChange={(weights, italic) => setSource({ ...source, weights, italic })}
+            />
+          )}
+
+          <FontPreview source={source} />
+          <CodeOutput css={output.css} html={output.html} tailwind={output.tailwind} />
         </div>
       )}
     </div>
   );
-};
-
-export default FontGenerator;
+}

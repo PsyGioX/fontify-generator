@@ -1,25 +1,46 @@
-import { useLocation } from "react-router-dom";
+/**
+ * Fontify Generator
+ * Copyright (c) 2025-2026 PsyGioX
+ * https://github.com/PsyGioX/fontify-generator
+ */
+
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
+import { useLanguage } from "@/contexts/language-context";
 
 const NotFound = () => {
-  const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
+    const previous = document.title;
+    document.title = `404 — ${t("notFound.title")}`;
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex";
+    document.head.appendChild(robots);
+    return () => {
+      document.title = previous;
+      robots.remove();
+    };
+  }, [t]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
-        </a>
-      </div>
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader />
+      <main className="hero-glow flex flex-1 items-center justify-center px-4 py-16 text-center">
+        <div>
+          <p className="text-6xl font-bold tracking-tight text-primary sm:text-7xl">404</p>
+          <h1 className="mt-4 text-2xl font-semibold sm:text-3xl">{t("notFound.title")}</h1>
+          <p className="mx-auto mt-2 max-w-md text-muted-foreground">{t("notFound.description")}</p>
+          <Button asChild className="mt-6">
+            <Link to="/">{t("notFound.back")}</Link>
+          </Button>
+        </div>
+      </main>
+      <SiteFooter />
     </div>
   );
 };
